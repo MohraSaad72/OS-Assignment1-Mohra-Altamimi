@@ -30,14 +30,21 @@ class Process implements Runnable {
     private int timeQuantum; // Time slice (time quantum) allowed per CPU access (in milliseconds)
     private int remainingTime; // Time left for the process to finish its execution
     private int priority; // Feature 1: Add priority field
-    // Constructor to initialize the process with name, burst time, and time quantum
+    // Feature 3: Track waiting time
+    private long creationTime;
+    private long totalWaitingTime = 0;
+    private long lastEnqueueTime;
 
+    // Constructor to initialize the process with name, burst time, and time quantum
     public Process(String name, int burstTime, int timeQuantum) {
         this.name = name;
         this.burstTime = burstTime;
         this.timeQuantum = timeQuantum;
         this.remainingTime = burstTime; // Initially, remaining time is equal to the burst time
         this.priority = 1 + new Random().nextInt(5); // Feature 1: Initialize priority
+        // feature 3
+        this.creationTime = System.currentTimeMillis();
+        this.lastEnqueueTime = creationTime;
     }
 
     // This method will be called when the thread for this process is started
@@ -149,6 +156,27 @@ class Process implements Runnable {
     public int getPriority() {
         return priority;
     }
+
+    // Feature 3: Setter for enqueue time
+    public void setLastEnqueueTime(long time) {
+        this.lastEnqueueTime = time;
+    }
+
+    // Feature 3: Add waiting time to process
+    public void addWaitingTime(long time) {
+        this.totalWaitingTime += time;
+    }
+    // Feature 3: Get last enqueue time
+
+    public long getLastEnqueueTime() {
+        return lastEnqueueTime;
+    }
+
+    // Feature 3: Get total waiting time for the process
+    public long getWaitingTime() {
+        return totalWaitingTime;
+    }
+
 }
 
 public class SchedulerSimulation {
@@ -232,16 +260,21 @@ public class SchedulerSimulation {
         while (!processQueue.isEmpty()) {
             // Get the next thread from the queue (FIFO)
             Thread currentThread = processQueue.poll(); // Dequeues the next thread
+            Process process = processMap.get(currentThread); // Feature 3: Retrieve process to calculate waiting time
+
+            // Feature 3: Calculate waiting time
+            long now = System.currentTimeMillis();
+            process.addWaitingTime(now - process.getLastEnqueueTime());
 
             // Print the current process queue (list of process IDs in the queue)
             System.out.println(Colors.BOLD + Colors.MAGENTA + "┌─ Ready Queue " + "─".repeat(65) + Colors.RESET);
             System.out.print(Colors.MAGENTA + "│ " + Colors.RESET + Colors.BRIGHT_WHITE + "[" + Colors.RESET);
             int queueCount = 0;
             for (Thread thread : processQueue) {
-                Process process = processMap.get(thread);
+                Process process1 = processMap.get(thread);
                 if (queueCount > 0)
                     System.out.print(Colors.WHITE + " → " + Colors.RESET);
-                System.out.print(Colors.BRIGHT_CYAN + process.getName() + Colors.RESET);
+                System.out.print(Colors.BRIGHT_CYAN + process1.getName() + Colors.RESET);
                 queueCount++;
             }
             if (queueCount == 0) {
@@ -263,23 +296,30 @@ public class SchedulerSimulation {
             }
 
             // Retrieve the process associated with the thread from the map
-            Process process = processMap.get(currentThread);
+            Process process1 = processMap.get(currentThread);
 
             // Check if the process is not finished
-            if (!process.isFinished()) {
+            if (!process1.isFinished()) {
                 // If the process still has remaining time, check if there are more processes in
                 // queue
                 if (!processQueue.isEmpty()) {
                     // Re-enqueue the process to give it another chance to run in the next round
-                    addProcessToQueue(process, processQueue, processMap);
+                    addProcessToQueue(process1, processQueue, processMap);
                 } else {
                     // If this is the last process in the queue, run it to completion
-                    System.out.println(Colors.BRIGHT_YELLOW + "  ⚠ " + Colors.CYAN + process.getName() +
+                    System.out.println(Colors.BRIGHT_YELLOW + "  ⚠ " + Colors.CYAN + process1.getName() +
                             Colors.RESET + Colors.YELLOW + " is the last process → running to completion" +
                             Colors.RESET);
-                    process.runToCompletion(); // Run until the process completes
+                    process1.runToCompletion(); // Run until the process completes
                 }
             }
+        }
+        // Feature 3: Display process summary
+        System.out.println("\nProcess Summary:");
+        System.out.println("Name\tBurst\tWaiting");
+
+        for (Process p : processMap.values()) {
+            System.out.println(p.getName() + "\t" + p.getBurstTime() + "\t" + p.getWaitingTime());
         }
 
         // End of the scheduler simulation
@@ -304,6 +344,8 @@ public class SchedulerSimulation {
         // Create a new thread to run the process
         Thread thread = new Thread(process);
 
+        // Feature 3: Update enqueue time
+        process.setLastEnqueueTime(System.currentTimeMillis());
         // Add the thread to the ready queue
         processQueue.add(thread);
 
