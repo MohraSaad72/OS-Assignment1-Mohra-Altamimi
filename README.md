@@ -448,14 +448,14 @@ These questions help you demonstrate technical understanding. Each answer should
 Submit a **text file** named: `YourName_StudentID_Assignment1.txt`
 
 **The file should contain:**
-```
-Student Name: [Your Full Name]
-Student ID: [Your Student ID]
-GitHub Username: [your-github-username]
-Repository Link: https://github.com/[your-username]/OS-Assignment1-[YourName]
-Video Link: [Google Drive link - make sure it's accessible to anyone with the link]
-Date Submitted: [Submission Date]
-```
+
+Student Name: mohra saad altamimi
+Student ID: 445052020
+GitHub Username:MohraSaad72
+Repository Link: https://github.com/MohraSaad72/OS-Assignment1-Mohra-Altamimi
+Video Link: https://drive.google.com/file/d/1rBFy7SBXD_wC4FU1pJ_ug967e0e3Abkt/view?usp=sharing
+Date Submitted: march 30,2026
+
 
 **Example:**
 ```
